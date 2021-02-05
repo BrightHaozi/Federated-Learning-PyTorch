@@ -26,9 +26,10 @@ if __name__ == '__main__':
     path_project = os.path.abspath('..')
     logger = SummaryWriter('../logs')
 
-    args = args_parser()
-    exp_details(args)
+    args = args_parser()    # 从options.py中获取所有超参数
+    exp_details(args)   # 显示输出所有超参数信息
 
+    # 选择cpu/gpu
     if args.gpu:
         torch.cuda.set_device(args.gpu)
     device = 'cuda' if args.gpu else 'cpu'
@@ -77,10 +78,20 @@ if __name__ == '__main__':
         print(f'\n | Global Training Round : {epoch+1} |\n')
 
         global_model.train()
-        m = max(int(args.frac * args.num_users), 1)
-        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        m = max(int(args.frac * args.num_users), 1) # 参与本轮训练的client数量
+        '''
+        numpy.random.choice(a, size=None, replace=True, p=None)
+        从a(只要是ndarray都可以，但必须是一维的)中随机抽取数字，并组成指定大小(size)的数组
+        replace:True表示可以取相同数字，False表示不可以取相同数字
+        数组p：与数组a相对应，表示取数组a中每个元素的概率，默认为选取每个元素的概率相同。
+        '''
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)  # 选出m个client
 
         for idx in idxs_users:
+            '''
+            从这里可以看出，没有为每个client专门实例化一个模型，只需每轮训练时生成一个全局模型的深拷贝
+            即可。
+            '''
             local_model = LocalUpdate(args=args, dataset=train_dataset,
                                       idxs=user_groups[idx], logger=logger)
             w, loss = local_model.update_weights(
@@ -92,7 +103,7 @@ if __name__ == '__main__':
         global_weights = average_weights(local_weights)
 
         # update global weights
-        global_model.load_state_dict(global_weights)
+        global_model.load_state_dict(global_weights)    # 将平均后的模型赋值给global model
 
         loss_avg = sum(local_losses) / len(local_losses)
         train_loss.append(loss_avg)
