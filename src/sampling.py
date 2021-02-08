@@ -39,11 +39,11 @@ def mnist_noniid(dataset, num_users):
 
     # sort labels
     idxs_labels = np.vstack((idxs, labels))
-    idxs_labels = idxs_labels[:, idxs_labels[1, :].argsort()]
-    idxs = idxs_labels[0, :]
+    idxs_labels = idxs_labels[:, idxs_labels[1, :].argsort()]   # 将数据按类别排序，从前到后是0-9类
+    idxs = idxs_labels[0, :]    # 取出排序后的数据编号
 
     # divide and assign 2 shards/client
-    for i in range(num_users):
+    for i in range(num_users):  # 为每个client分配 2 shards 数据
         rand_set = set(np.random.choice(idx_shard, 2, replace=False))
         idx_shard = list(set(idx_shard) - rand_set)
         for rand in rand_set:
@@ -141,7 +141,7 @@ def mnist_noniid_unequal(dataset, num_users):
 
     return dict_users
 
-
+# iid数据构建方法：将数据集打乱，随机抽取600个(num_users=100)划分给一个client。
 def cifar_iid(dataset, num_users):
     """
     Sample I.I.D. client data from CIFAR10 dataset
@@ -153,9 +153,9 @@ def cifar_iid(dataset, num_users):
     dict_users, all_idxs = {}, [i for i in range(len(dataset))]
     for i in range(num_users):
         dict_users[i] = set(np.random.choice(all_idxs, num_items,
-                                             replace=False))
-        all_idxs = list(set(all_idxs) - dict_users[i])
-    return dict_users
+                                             replace=False))    # 从all_idxs个索引中挑选num_items个，构成一个client数据集的索引
+        all_idxs = list(set(all_idxs) - dict_users[i])  # 更新all_idxs，将已经被挑选的剔除
+    return dict_users   # 返回的是每个client对应的数据集下标索引
 
 
 def cifar_noniid(dataset, num_users):
@@ -168,11 +168,14 @@ def cifar_noniid(dataset, num_users):
     num_shards, num_imgs = 200, 250
     idx_shard = [i for i in range(num_shards)]
     dict_users = {i: np.array([]) for i in range(num_users)}
-    idxs = np.arange(num_shards*num_imgs)
+    idxs = np.arange(num_shards*num_imgs)   # 生成数据集的索引
     # labels = dataset.train_labels.numpy()
     labels = np.array(dataset.train_labels)
 
     # sort labels
+    '''
+    np.vstack 将两个数组按垂直方向（行顺序）堆叠数组构成一个新的数组
+    '''
     idxs_labels = np.vstack((idxs, labels))
     idxs_labels = idxs_labels[:, idxs_labels[1, :].argsort()]
     idxs = idxs_labels[0, :]

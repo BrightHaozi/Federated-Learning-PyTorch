@@ -30,7 +30,7 @@ def get_dataset(args):
         # sample training data amongst users
         if args.iid:
             # Sample IID user data from Mnist
-            user_groups = cifar_iid(train_dataset, args.num_users)
+            user_groups = cifar_iid(train_dataset, args.num_users)  # 注意这里划分的是训练集
         else:
             # Sample Non-IID user data from Mnist
             if args.unequal:

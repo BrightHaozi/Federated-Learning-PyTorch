@@ -24,12 +24,13 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
+    #   idxs 是署于本client的数据索引
     def __init__(self, args, dataset, idxs, logger):
         self.args = args
         self.logger = logger
         self.trainloader, self.validloader, self.testloader = self.train_val_test(
             dataset, list(idxs))
-        self.device = 'cuda' if args.gpu else 'cpu'
+        self.device = 'cuda' if args.gpu is not None else 'cpu'
         # Default criterion set to NLL loss function
         self.criterion = nn.NLLLoss().to(self.device)
 
@@ -102,7 +103,7 @@ class LocalUpdate(object):
             loss += batch_loss.item()
 
             # Prediction
-            _, pred_labels = torch.max(outputs, 1)
+            _, pred_labels = torch.max(outputs, 1)  # 返回每一行中最大的元素，用_记录值，用pred_labels记录下标
             pred_labels = pred_labels.view(-1)
             correct += torch.sum(torch.eq(pred_labels, labels)).item()
             total += len(labels)
@@ -118,7 +119,7 @@ def test_inference(args, model, test_dataset):
     model.eval()
     loss, total, correct = 0.0, 0.0, 0.0
 
-    device = 'cuda' if args.gpu else 'cpu'
+    device = 'cuda' if args.gpu is not None else 'cpu'
     criterion = nn.NLLLoss().to(device)
     testloader = DataLoader(test_dataset, batch_size=128,
                             shuffle=False)
