@@ -30,9 +30,9 @@ if __name__ == '__main__':
     exp_details(args)   # 显示输出所有超参数信息
 
     # 选择cpu/gpu
-    if args.gpu:
+    if args.gpu is not None:
         torch.cuda.set_device(args.gpu)
-    device = 'cuda' if args.gpu else 'cpu'
+    device = 'cuda' if args.gpu is not None else 'cpu'
 
     # load dataset and user groups
     train_dataset, test_dataset, user_groups = get_dataset(args)
@@ -93,10 +93,10 @@ if __name__ == '__main__':
             即可。
             '''
             local_model = LocalUpdate(args=args, dataset=train_dataset,
-                                      idxs=user_groups[idx], logger=logger)
+                                      idxs=user_groups[idx], logger=logger) # 注意这里发给client的是train_dataset
             w, loss = local_model.update_weights(
                 model=copy.deepcopy(global_model), global_round=epoch)
-            local_weights.append(copy.deepcopy(w))
+            local_weights.append(copy.deepcopy(w))  # 记录下client model的模型参数和训练集Loss
             local_losses.append(copy.deepcopy(loss))
 
         # update global weights
@@ -126,10 +126,10 @@ if __name__ == '__main__':
             print('Train Accuracy: {:.2f}% \n'.format(100*train_accuracy[-1]))
 
     # Test inference after completion of training
-    test_acc, test_loss = test_inference(args, global_model, test_dataset)
+    test_acc, test_loss = test_inference(args, global_model, test_dataset)  # 在测试集上测试全局模型的准确率
 
     print(f' \n Results after {args.epochs} global rounds of training:')
-    print("|---- Avg Train Accuracy: {:.2f}%".format(100*train_accuracy[-1]))
+    print("|---- Avg Train Accuracy: {:.2f}%".format(100*train_accuracy[-1]))   # -1是因为
     print("|---- Test Accuracy: {:.2f}%".format(100*test_acc))
 
     # Saving the objects train_loss and train_accuracy:
